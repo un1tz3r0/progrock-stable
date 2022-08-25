@@ -16,6 +16,17 @@ pip install jsonmerge clean-fid resize-right torchdiffeq
 
 # Installation instructions
 
+Install Homebrew:
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+Restart your terminal, then:
+```
+brew install miniforge
+conda init zsh
+```
+Restart your terminal again.
+
 ## Download via zip file
 Make sure you're on the apple-silicon branch, then click "Code" and select "Download ZIP"
 
