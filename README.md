@@ -15,18 +15,17 @@ pip install jsonmerge clean-fid resize-right torchdiffeq
 ```
 
 # Installation instructions
-Download this repository either by zip file or via git.
 
-## Zip File
+## Download via zip file
 Make sure you're on the apple-silicon branch, then click "Code" and select "Download ZIP"
 
-## Via git
+## Download via git
 ```
 git clone https://github.com/lowfuel/progrock-stable prs
 cd prs
 git checkout apple-silicon
 ```
-
+## Install
 Create a [conda](https://conda.io/) environment named `prs`:
 ```
 conda env create -f environment.yaml
