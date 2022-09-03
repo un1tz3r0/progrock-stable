@@ -240,7 +240,10 @@ def do_run(device, model, opt):
 
                     # to image
                     grid = 255. * rearrange(grid, 'c h w -> h w c').cpu().numpy()
-                    output_filename = os.path.join(outpath, f'{opt.batch_name}{opt.device_id}-{grid_count:04}{opt.filetype}')
+                    output_basename = os.path.join(outpath, f'{opt.batch_name}{opt.device_id}-{grid_count:04}')
+                    with open(f"{output_basename}.json", "wt") as jsonfh:
+                        json.dump({**opt.__dict__, 'prompt':prompts}, jsonfh)
+                    output_filename = f"{output_basename}{opt.filetype}"
                     Image.fromarray(grid.astype(np.uint8)).save(output_filename, pnginfo=metadata, quality = opt.quality)
                     print(f'\nYour output was saved as "{output_filename}"\n')
                     grid_count += 1
@@ -394,11 +397,34 @@ def parse_args():
         help='How many images to generate'
     )
     my_parser.add_argument(
+        '--steps',
+        type=int,
+        action='store',
+        required=False,
+        help='Specify the number of steps to diffuse over'
+    )
+    my_parser.add_argument(
         '--seed',
         type=int,
         action='store',
         required=False,
         help='Specify the numeric seed to be used'
+    )
+    my_parser.add_argument(
+        '--width', '-W',
+        type=int,
+        action='store',
+        required=False,
+        #default=512,
+        help='Specify the output width'
+    )
+    my_parser.add_argument(
+        '--height', '-H',
+        type=int,
+        action='store',
+        required=False,
+        #default=512,
+        help='Specify the output height'
     )
     my_parser.add_argument(
         '-f',
@@ -534,6 +560,7 @@ class Settings:
     gobig_realesrgan = False
     cool_down = 0.0
     checkpoint = "./models/sd-v1-4.ckpt"
+    inf_config = "./configs/stable-diffusion/v1-inference.yaml"
     use_jpg = False
     hide_metadata = False
     method = "k_lms"
@@ -586,6 +613,8 @@ class Settings:
             self.cool_down = (settings_file["cool_down"])
         if is_json_key_present(settings_file, 'checkpoint'):
             self.checkpoint = (settings_file["checkpoint"])
+        if is_json_key_present(settings_file, 'inf_config'):
+            self.inf_config = (settings_file["inf_config"])
         if is_json_key_present(settings_file, 'use_jpg'):
             self.use_jpg = (settings_file["use_jpg"])
         if is_json_key_present(settings_file, 'hide_metadata'):
@@ -698,8 +727,17 @@ def main():
     if cl_args.from_file:
         settings.from_file = cl_args.from_file
 
+    if cl_args.steps:
+        settings.steps = cl_args.steps
+
     if cl_args.seed:
         settings.seed = cl_args.seed
+
+    if cl_args.width:
+        settings.width = cl_args.width
+
+    if cl_args.height:
+        settings.height = cl_args.height
 
     outdir = (f'./out/{settings.batch_name}')
     filetype = ".jpg" if settings.use_jpg else ".png"
@@ -717,7 +755,7 @@ def main():
 
     # setup the model
     ckpt = settings.checkpoint # "./models/sd-v1-3-full-ema.ckpt"
-    inf_config = "./configs/stable-diffusion/v1-inference.yaml"
+    inf_config = settings.inf_config # "./configs/stable-diffusion/v1-inference.yaml"
     print(f'Loading the model and checkpoint ({ckpt})...')
     config = OmegaConf.load(f"{inf_config}")
     model = load_model_from_config(config, f"{ckpt}", verbose=False)
